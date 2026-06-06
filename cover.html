@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>世界杯首发抽签器 · 2026 FIFA WORLD CUP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #080D14;
+      --pitch-green: #1f7a4d;
+      --pitch-line: rgba(31, 122, 77, 0.3);
+      --gold-light: #F5BF3E;
+      --gold: #D97706;
+      --red: #C83B31;
+      --red-dark: #9E2821;
+      --gray: #94A3B8;
+      --gray-dark: #616D7E;
+      --white-06: rgba(255,255,255,0.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-deep);
+      font-family: 'Source Sans 3', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    .stage {
+      position: absolute;
+      top: 0; left: 0;
+      width: 1920px; height: 1080px;
+      transform-origin: top left;
+      overflow: hidden;
+    }
+
+    .cover {
+      position: relative;
+      width: 1920px; height: 1080px;
+      background: var(--bg-deep);
+      overflow: hidden;
+    }
+
+    /* ===== Pitch Background ===== */
+    .pitch-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(
+        ellipse at 50% 50%,
+        rgba(31, 122, 77, 0.33) 0%,
+        rgba(8, 13, 20, 0.95) 70%
+      );
+      z-index: 0;
+    }
+
+    /* Pitch stripes */
+    .pitch-stripe { position: absolute; left: 0; width: 1920px; background: var(--pitch-line); z-index: 0; pointer-events: none; }
+    .pitch-stripe:nth-child(2) { top: 360px; height: 2px; opacity: 0.25; }
+    .pitch-stripe:nth-child(3) { top: 540px; height: 2px; opacity: 0.4; }
+    .pitch-stripe:nth-child(4) { top: 720px; height: 2px; opacity: 0.25; }
+    .pitch-stripe:nth-child(5) { top: 630px; height: 1px; opacity: 0.35; }
+    .pitch-stripe:nth-child(6) { top: 450px; height: 1px; opacity: 0.35; }
+
+    /* Center Circle */
+    .center-circle {
+      position: absolute;
+      left: 840px; top: 420px;
+      width: 240px; height: 240px;
+      border: 2px solid rgba(31, 122, 77, 0.25);
+      border-radius: 50%;
+      z-index: 0; pointer-events: none;
+    }
+    .center-dot {
+      position: absolute;
+      left: 954px; top: 534px;
+      width: 12px; height: 12px;
+      background: rgba(31, 122, 77, 0.35);
+      border-radius: 50%;
+      z-index: 0; pointer-events: none;
+    }
+
+    /* Ambient Glows */
+    .glow-green {
+      position: absolute;
+      left: 560px; top: -100px;
+      width: 800px; height: 400px;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(5, 150, 80, 0.18) 0%,
+        transparent 70%
+      );
+      z-index: 0; pointer-events: none;
+    }
+    .glow-gold {
+      position: absolute;
+      left: 710px; top: 540px;
+      width: 500px; height: 500px;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(217, 119, 6, 0.12) 0%,
+        transparent 70%
+      );
+      z-index: 0; pointer-events: none;
+    }
+
+    /* ===== Title ===== */
+    .hero-title {
+      position: absolute;
+      left: 50%; top: 160px;
+      transform: translateX(-50%);
+      font-family: 'Bebas Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 108px;
+      font-weight: 400;
+      letter-spacing: 8px;
+      text-align: center;
+      line-height: 1;
+      background: linear-gradient(to bottom, var(--gold-light) 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .hero-subtitle {
+      position: absolute;
+      left: 50%; top: 288px;
+      transform: translateX(-50%);
+      font-size: 32px;
+      color: var(--gray);
+      letter-spacing: 2px;
+      text-align: center;
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    /* ===== Formation Zone ===== */
+    .formation-zone {
+      position: absolute;
+      left: 680px; top: 370px;
+      width: 560px; height: 420px;
+      border: 1px solid rgba(31, 122, 77, 0.12);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.025);
+      z-index: 2;
+    }
+
+    /* Connected lines */
+    .form-line {
+      position: absolute;
+      height: 2px;
+      background: rgba(31, 122, 77, 0.18);
+      z-index: 2; pointer-events: none;
+    }
+    .form-line.def  { left: 720px; top: 578px; width: 480px; }
+    .form-line.mid  { left: 800px; top: 458px; width: 320px; }
+    .form-line.fwd  { left: 800px; top: 338px; width: 320px; }
+
+    /* Player dots */
+    .player-dot {
+      position: absolute;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid rgba(245, 191, 62, 0.55);
+      background: rgba(217, 119, 6, 0.12);
+      z-index: 3; pointer-events: none;
+      transition: all 0.3s ease;
+    }
+    .player-dot.gk  { left: 946px; top: 660px; border-color: rgba(245,191,62,0.75); }
+    .player-dot.d1  { left: 706px; top: 550px; }
+    .player-dot.d2  { left: 866px; top: 550px; }
+    .player-dot.d3  { left: 1026px; top: 550px; }
+    .player-dot.d4  { left: 1186px; top: 550px; }
+    .player-dot.m1  { left: 786px; top: 430px; }
+    .player-dot.m2  { left: 946px; top: 430px; }
+    .player-dot.m3  { left: 1106px; top: 430px; }
+    .player-dot.f1  { left: 786px; top: 310px; }
+    .player-dot.f2  { left: 946px; top: 310px; }
+    .player-dot.f3  { left: 1106px; top: 310px; }
+
+    /* Position Labels */
+    .pos-label {
+      position: absolute;
+      font-family: 'Source Sans 3', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 13px;
+      color: rgba(148, 163, 184, 0.5);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      z-index: 2; pointer-events: none;
+    }
+    .pos-label.gk  { left: 936px; top: 693px; }
+    .pos-label.def { left: 690px; top: 583px; }
+    .pos-label.mid { left: 770px; top: 463px; }
+    .pos-label.fwd { left: 770px; top: 340px; }
+
+    /* ===== CTA Button ===== */
+    .cta-wrapper {
+      position: absolute;
+      left: 820px; top: 830px;
+      z-index: 5;
+    }
+    .cta-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 280px; height: 64px;
+      background: linear-gradient(to bottom, var(--red) 0%, var(--red-dark) 100%);
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 8px 28px rgba(200, 59, 49, 0.45);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      animation: pulse-shadow 2s ease-in-out infinite;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(200, 59, 49, 0.6);
+    }
+    .cta-button span {
+      font-family: 'Bebas Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 38px;
+      color: #fff;
+      letter-spacing: 5px;
+    }
+    .cta-arrow {
+      color: #fff;
+      font-size: 24px;
+      margin-left: 4px;
+      margin-top: 4px;
+    }
+
+    @keyframes pulse-shadow {
+      0%, 100% { box-shadow: 0 8px 28px rgba(200, 59, 49, 0.45); }
+      50% { box-shadow: 0 8px 38px rgba(200, 59, 49, 0.65); }
+    }
+
+    /* ===== Stats Strip ===== */
+    .stats-strip {
+      position: absolute;
+      left: 650px; top: 920px;
+      width: 620px; height: 56px;
+      background: var(--white-06);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      z-index: 3;
+    }
+    .stat-group {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      color: var(--gold-light);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 18px;
+      color: var(--gray);
+      letter-spacing: 2px;
+    }
+    .stat-divider {
+      width: 1px; height: 24px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* ===== Footer ===== */
+    .cover-footer {
+      position: absolute;
+      left: 50%; bottom: 42px;
+      transform: translateX(-50%);
+      font-size: 20px;
+      color: var(--gray-dark);
+      letter-spacing: 4px;
+      text-align: center;
+      z-index: 2;
+    }
+
+    /* ===== Scaling JS ===== */
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="cover">
+
+      <!-- Background -->
+      <div class="pitch-bg"></div>
+      <div class="pitch-stripe"></div>
+      <div class="pitch-stripe"></div>
+      <div class="pitch-stripe"></div>
+      <div class="pitch-stripe"></div>
+      <div class="pitch-stripe"></div>
+      <div class="center-circle"></div>
+      <div class="center-dot"></div>
+      <div class="glow-green"></div>
+      <div class="glow-gold"></div>
+
+      <!-- Title -->
+      <h1 class="hero-title">世界杯首发抽签器</h1>
+      <p class="hero-subtitle">随机抽取你的世界杯梦幻 11 人首发阵容</p>
+
+      <!-- Formation Visualization -->
+      <div class="formation-zone">
+        <div class="form-line def"></div>
+        <div class="form-line mid"></div>
+        <div class="form-line fwd"></div>
+        <div class="player-dot gk"></div>
+        <div class="player-dot d1"></div>
+        <div class="player-dot d2"></div>
+        <div class="player-dot d3"></div>
+        <div class="player-dot d4"></div>
+        <div class="player-dot m1"></div>
+        <div class="player-dot m2"></div>
+        <div class="player-dot m3"></div>
+        <div class="player-dot f1"></div>
+        <div class="player-dot f2"></div>
+        <div class="player-dot f3"></div>
+        <span class="pos-label gk">GK</span>
+        <span class="pos-label def">DEF</span>
+        <span class="pos-label mid">MID</span>
+        <span class="pos-label fwd">FWD</span>
+      </div>
+
+      <!-- CTA Button -->
+      <div class="cta-wrapper">
+        <a href="./app.html" class="cta-button">
+          <span>开始抽签</span>
+          <span class="cta-arrow">→</span>
+        </a>
+      </div>
+
+      <!-- Stats Strip -->
+      <div class="stats-strip">
+        <div class="stat-group">
+          <span class="stat-num">1246</span>
+          <span class="stat-label">球员</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-group">
+          <span class="stat-num">48</span>
+          <span class="stat-label">球队</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-group">
+          <span class="stat-num">11</span>
+          <span class="stat-label">首发</span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="cover-footer">2026 FIFA WORLD CUP</div>
+
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const stage = document.getElementById('stage');
+      const DW = 1920, DH = 1080;
+
+      function resize() {
+        const ww = window.innerWidth, wh = window.innerHeight;
+        const s = Math.min(ww / DW, wh / DH);
+        const ox = (ww - DW * s) / 2, oy = (wh - DH * s) / 2;
+        stage.style.transform = `translate(${ox}px, ${oy}px) scale(${s})`;
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+    })();
+  </script>
+</body>
+</html>
