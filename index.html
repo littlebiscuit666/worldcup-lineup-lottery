@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>世界杯首发抽签器</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>世界杯首发抽签器</h1>
+        <p id="dataSummary">正在载入球员数据</p>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-button" id="copyButton" type="button">复制分享链接</button>
+        <button class="primary-button" id="drawButton" type="button">抽取阵容</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <aside class="control-panel" aria-label="抽签设置">
+        <section>
+          <h2>阵型</h2>
+          <div class="segmented-control" id="formationButtons" role="group" aria-label="阵型"></div>
+        </section>
+
+        <section>
+          <h2>奖池</h2>
+          <label class="field-label" for="teamSelect">球队范围</label>
+          <select id="teamSelect"></select>
+          <label class="toggle-row">
+            <input id="realRatingsOnly" type="checkbox" />
+            <span>只抽有 FC26 真实评分的球员</span>
+          </label>
+        </section>
+
+        <section>
+          <h2>签号</h2>
+          <label class="field-label" for="seedInput">Seed</label>
+          <div class="seed-row">
+            <input id="seedInput" autocomplete="off" spellcheck="false" />
+            <button class="icon-button" id="seedButton" type="button" title="生成新签号" aria-label="生成新签号">↻</button>
+          </div>
+        </section>
+
+        <section>
+          <h2>奖池状态</h2>
+          <dl class="rules-list" id="poolStats"></dl>
+        </section>
+      </aside>
+
+      <section class="pitch-stage" aria-label="首发阵容">
+        <div class="score-strip" aria-live="polite">
+          <div>
+            <span class="stat-label">阵容能力</span>
+            <strong id="averageOverall">--</strong>
+          </div>
+          <div>
+            <span class="stat-label">总身价</span>
+            <strong id="totalValue">--</strong>
+          </div>
+          <div>
+            <span class="stat-label">欧皇指数</span>
+            <strong id="luckScore">--</strong>
+          </div>
+          <div>
+            <span class="stat-label">估算评分</span>
+            <strong id="estimatedCount">--</strong>
+          </div>
+        </div>
+
+        <div class="pitch" id="pitch"></div>
+        <p class="status-line" id="statusLine"></p>
+      </section>
+
+      <aside class="lineup-panel" aria-label="阵容明细">
+        <div class="panel-header">
+          <h2>首发名单</h2>
+          <span id="lineupMeta">--</span>
+        </div>
+        <ol class="lineup-list" id="lineupList"></ol>
+      </aside>
+    </main>
+
+    <script src="./data/players.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
